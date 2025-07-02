@@ -43,7 +43,7 @@ header {
   transition: left 0.3s ease-in-out;
   z-index: 1000;
   background-color: #ead7c3;
-  border-right: 2px solid rgb(99,99, 99);
+  /* border-right: 2px solid rgb(99,99, 99); */
 }
 
 .sidebar.open {

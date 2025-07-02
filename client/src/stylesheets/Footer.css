@@ -2,7 +2,9 @@ footer {
     display: flex;
     justify-content: center;
     align-content: center;
-    margin-top: 50px;
+    margin-top: 100px;
+    min-height: 50px;
+    flex:1;
     border-top: 3px solid rgb(99,99, 99);
     background-color: #DCE0D9;
 }

@@ -34,13 +34,91 @@ function Main({
     const [showHeight, setShowHeight] = useState(false);
     const [showCollege, setShowCollege] = useState(false);
     const [showNumber, setShowNumber] = useState(false);
-    
+
+    const [duration, setDuration] = useState(timeLimit * 1000); 
+    const [timeLeft, setTimeLeft] = useState(duration);
+    const [running, setRunning] = useState(false);
+
+    const endTimeRef = useRef(null);
+    const intervalRef = useRef(null);
+
+    const start = () => {
+        if (running) {
+            return;
+        }
+        endTimeRef.current = Date.now() + timeLeft;
+        setRunning(true);
+
+        intervalRef.current = setInterval(() => {
+        const remaining = endTimeRef.current - Date.now();
+        if (remaining <= 0) {
+            clearInterval(intervalRef.current);
+            setRunning(false);
+            setTimeLeft(0);
+            handleWrong();
+        } else {
+            setTimeLeft(remaining);
+        }
+        }, 50);
+    };
+
+    const stop = () => {
+        if (!running) {
+            return;
+        }
+        clearInterval(intervalRef.current);
+        setRunning(false);
+        setTimeLeft(endTimeRef.current - Date.now());
+    };
+
+    const reset = () => {
+        clearInterval(intervalRef.current);
+        setRunning(false);
+        setTimeLeft(duration);
+    };
+
+    useEffect(() => {
+        const seconds = Number(timeLimit);
+        const ms = seconds * 1000;
+        clearInterval(intervalRef.current);
+        setRunning(false);
+        setDuration(ms);
+        setTimeLeft(ms);
+    }, [timeLimit])
+
+    useEffect(() => {
+        return () => clearInterval(intervalRef.current);
+    }, []);
+
+    // useEffect(()=>{
+    //     if(timeLeft === 0 && !running){
+    //         handleWrong();
+    //     }
+    // },[running, timeLeft])
+
+    useEffect(reset, [enableTime]);
+
+    useEffect(()=>{
+        if(lives === 0) alert("SHUTUP");
+    },[lives])
+
+    useEffect(()=>{
+        if(currentPlayer !== null && enableTime) start();
+    },[currentPlayer]) 
+
+    const secondsDisplay = Math.floor(timeLeft / 1000);
+    const millisecondsDisplay = Math.floor((timeLeft % 1000) / 10)
+        .toString()
+        .padStart(2, "0");
+
     const modal = useRef(null);
+
+    var originalLives = lives;
 
     useEffect(() => {
         clearAll();
     },[])
-  
+
     const BASE_URL = import.meta.env.VITE_API_URL;
 
     const clearAll = () => {
@@ -84,9 +162,13 @@ function Main({
         setStreak(streak+1);
         setResults([]);
         setInput("");
-        modal.current.showModal();
         setIsExploding(true);
         setTimeout(()=>{
+            if(enableTime) stop();
+            modal.current.showModal();
+        },0);
+        setTimeout(()=>{
+            if(enableTime) reset();
             modal.current.close();
             generateFourPlayers();
             setIsExploding(false);
@@ -101,6 +183,7 @@ function Main({
     }
 
     const handleWrong = () => {
+        if(enableLives && lives > 0) setLives(lives-1);
         setCorrect(false);
         switch (difficulty) {
         case 'EASY':
@@ -116,8 +199,12 @@ function Main({
         setStreak(0);
         setResults([]);
         setInput("");
-        modal.current.showModal();
         setTimeout(()=>{
+            if(enableTime) stop();
+            modal.current.showModal();
+        },0);
+        setTimeout(()=>{
+            if(enableTime) reset();
             modal.current.close();
             generateFourPlayers();
             setGuess(null);
@@ -143,7 +230,7 @@ function Main({
         }
         else if(event.key == 'Enter'){
             if(results.length == 1){
-                const onlyName = results[0].name;
+                let onlyName = results[0].name;
                 setInput(onlyName);
                 setTimeout(()=>checkCorrect(onlyName),100);
             }
@@ -162,6 +249,7 @@ function Main({
     }
 
     const handleChangeDifficulty = (newDifficulty) => {
+        if(enableTime) reset();
         if(streak > 0){
             if(confirm(`Are you sure you want to change difficulties?`)){
                 switch (difficulty) {
@@ -188,33 +276,35 @@ function Main({
         }
     }
 
-    const handleGiveUp = () => {
-        setLives(0);
-        setCorrect(false);
+    const renderHearts = () => {
+        const hearts = [];
+        for(let i = 0; i < lives; i++){
+            hearts.push(<span key={i}>❤️</span>);
+        }
+        if(hearts.length > 0) return hearts;
+        return <b>0</b>;
     }
 
     return (
         <main>
             {/* DIFFICULTY BUTTONS */}
             <div className='difficulty-button-container'>
-                <button onClick={()=>handleChangeDifficulty("EASY")} id='easy-button' className={difficulty=='EASY' ? 'selected' : ''} disabled={difficulty=='EASY'}>Easy</button>
-                <button onClick={()=>handleChangeDifficulty("NORMAL")} id='normal-button' className={difficulty=='NORMAL' ? 'selected' : ''} disabled={difficulty=='NORMAL'}>Normal</button>
-                <button onClick={()=>handleChangeDifficulty("HARD")} id='hard-button' className={difficulty=='HARD' ? 'selected' : ''} disabled={difficulty=='HARD'}>Hard</button>
+                <button onClick={()=>handleChangeDifficulty("EASY")} className='easy-button' id={difficulty=='EASY' ? 'selected' : ''} disabled={difficulty=='EASY'}>Easy</button>
+                <button onClick={()=>handleChangeDifficulty("NORMAL")} className='normal-button' id={difficulty=='NORMAL' ? 'selected' : ''} disabled={difficulty=='NORMAL'}>Normal</button>
+                <button onClick={()=>handleChangeDifficulty("HARD")} className='hard-button' id={difficulty=='HARD' ? 'selected' : ''} disabled={difficulty=='HARD'}>Hard</button>
             </div>
     
             {/* STREAK & BEST */}
             <div className='text-container'>
-                <span>Current Streak: </span>
-                <strong style={{color: streak > 0 ? 'darkgreen' : 'inherit'}}>{streak}{streak > 0 && '🔥'}</strong>
-                <br style={{display: ''}}></br>
-                <span>Personal Best: </span>
-                {difficulty=="EASY" && <strong>{personalBestEasy}</strong>}
-                {difficulty=="NORMAL" && <strong>{personalBestNormal}</strong>}
-                {difficulty=="HARD" && <strong>{personalBestHard}</strong>}
-
-                {enableLives && <div>
-                    Lives: {lives}
+                <div>Current Streak: <strong style={{color: streak > 0 ? 'darkgreen' : 'inherit'}}>{streak}{streak > 0 && '🔥'}</strong></div>
+                <div>|</div>
+                {enableLives && <div id='lives'>
+                    <div>
+                        Lives: {renderHearts()}
+                    </div>
+                    <div>|</div>
                 </div>}
+                <div>Personal Best: {difficulty=="EASY" && <strong>{personalBestEasy}</strong>} {difficulty=="NORMAL" && <strong>{personalBestNormal}</strong>} {difficulty=="HARD" && <strong>{personalBestHard}</strong>}</div>
             </div>
     
             {/* SEARCH BAR & RESULTS */}
@@ -229,20 +319,36 @@ function Main({
                 ))}
                 </div>
             </div>}
-            
-            {/* PLAYER IMAGE */}
-            {currentPlayer ? <img id='playerImg' src={`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${currentPlayer.id}.png&w=350&h=254`} alt='Guess the player' onError={()=>generateFourPlayers()} style={{filter: (difficulty=="HARD" && !isExploding) ? 'brightness(0%)' : ''}}></img> : <div className='silhouette-container'>
-                <img width='436px' style={{marginTop: '20px'}} src={silhouette}></img>
-                <button onClick={()=>generateFourPlayers()} id='start-button'>Click here to start!</button>
+
+            {(currentPlayer && enableTime) && <div className='timer'>
+                <button title={running ? 'Pause' : 'Play'} onClick={()=>{
+                    if(running) stop();
+                    else start();
+                }}>{(running) ? '⏸️' : '▶️'}</button>
+                {secondsDisplay} {/*.{millisecondsDisplay}*/}
+                <button title='Reset' onClick={reset}>⏹️</button>
             </div>}
-    
+
+            {/* PLAYER IMAGE */}
+            {currentPlayer ? 
+                <img id='playerImg' src={`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${currentPlayer.id}.png&w=350&h=254`} alt='Guess the player' onError={()=>generateFourPlayers()} style={{filter: (difficulty=="HARD" && !isExploding) ? 'brightness(0%)' : ''}}></img> : 
+                <div className='silhouette-container'>
+                    <img width='436px' style={{marginTop: '20px'}} src={silhouette}></img>
+                    <button onClick={()=>generateFourPlayers()} id='start-button'>Start Game!</button>
+                </div>
+            }
+
             <dialog id='modal' ref={modal}>
                 <div className='modal-container'>
                     {/* {isExploding && <ConfettiExplosion></ConfettiExplosion>} */}
-                    {correct ? <b>Correct!</b> : 
-                    <div>
-                        <span style={{fontSize: '100px'}}>&#10060;</span>
-                        <b>Incorrect</b>
+                    {correct ? 
+                    <div className='correct-container'>
+                        <div style={{fontSize: '4em'}}>✅</div>
+                        <div><b>Correct!</b></div>
+                    </div> : 
+                    <div className='incorrect-container'>
+                        <div style={{fontSize: '4em'}}>❌</div>
+                        <div><b>{currentPlayer?.name}</b></div>
                     </div>}
                 </div>
             </dialog>
@@ -269,9 +375,9 @@ function Main({
               ))}
             </div>
             }
-            
+
             {/* HINTS */}
-            {(currentPlayer && difficulty !== "EASY" && enableHints) && 
+            {(currentPlayer && enableHints) && 
                 <div className='hint-container'>
                     <table>
                         <thead>
@@ -309,7 +415,7 @@ function Main({
                     </table>
                 </div>}
 
-            {currentPlayer && <button onClick={handleGiveUp}>Give up?</button>}
+            {currentPlayer && <button onClick={handleWrong}>Give up?</button>}
         </main>
     )
 }

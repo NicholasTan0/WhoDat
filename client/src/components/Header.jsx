@@ -50,8 +50,8 @@ function Header({
                 {/* <div id='menuOpen'><Hamburger color='#013141' toggled={isOpen} toggle={setOpen}></Hamburger></div> */}
                 <svg id="menuOpen" onClick={()=>setOpen(true)} width="40" height="40" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
                         d="M1.5 3C1.22386 3 1 3.22386 1 3.5C1 3.77614 1.22386 4 1.5 4H13.5C13.7761 4 14 3.77614 14 3.5C14 3.22386 13.7761 3 13.5 3H1.5ZM1 7.5C1 7.22386 1.22386 7 1.5 7H13.5C13.7761 7 14 7.22386 14 7.5C14 7.77614 13.7761 8 13.5 8H1.5C1.22386 8 1 7.77614 1 7.5ZM1 11.5C1 11.2239 1.22386 11 1.5 11H13.5C13.7761 11 14 11.2239 14 11.5C14 11.7761 13.7761 12 13.5 12H1.5C1.22386 12 1 11.7761 1 11.5Z"
                         fill="#013141"
                     />
@@ -73,16 +73,16 @@ function Header({
             {isOpen && <div className="overlay visible" onClick={() => setOpen(false)}></div>}
             <nav className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <svg id="menuClose" onClick={()=>setOpen(false)} width="48" height="48" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" fill="#013141">
-                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
                     <g id="SVGRepo_iconCarrier"> 
                         <g id="color"></g>
                         <g id="hair"></g> 
                         <g id="skin"></g> 
                         <g id="skin-shadow"></g> 
                         <g id="line"> 
-                            <line x1="17.5" x2="54.5" y1="17.5" y2="54.5" fill="none" stroke="#013141" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="4"></line> 
-                            <line x1="54.5" x2="17.5" y1="17.5" y2="54.5" fill="none" stroke="#013141" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="4"></line>
+                            <line x1="17.5" x2="54.5" y1="17.5" y2="54.5" fill="none" stroke="#013141" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" strokeWidth="4"></line> 
+                            <line x1="54.5" x2="17.5" y1="17.5" y2="54.5" fill="none" stroke="#013141" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" strokeWidth="4"></line>
                         </g> 
                     </g>
                 </svg>
