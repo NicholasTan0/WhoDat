@@ -1,7 +1,6 @@
 import '../stylesheets/Header.css'
 import logo from '../assets/logo.png'
 import icon from '../assets/favicon.png'
-import Hamburger from 'hamburger-react';
 import Switch from 'react-switch';
 
 import { useState, useRef } from 'react';
