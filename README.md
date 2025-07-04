@@ -4,7 +4,7 @@ Welcome to **WhoDat?**, an interactive web-based NBA guessing game where your kn
 
 ---
 
-## 🚀 **Features**
+## **Features**
 
 * Guess NBA players based on hints (e.g., team, position, PPG, age, college, jersey number).
 * Customizable game modes:
@@ -14,7 +14,7 @@ Welcome to **WhoDat?**, an interactive web-based NBA guessing game where your kn
 
 ---
 
-## 🎮 **How to Play**
+## **How to Play**
 
 1. Open the sidebar to toggle lives, hints, and timer mode.
 2. Press **"Start Game"** to generate a random player.
@@ -24,7 +24,7 @@ Welcome to **WhoDat?**, an interactive web-based NBA guessing game where your kn
 
 ---
 
-## 💻 **Tech Stack**
+## **Tech Stack**
 
  [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)](#)
  [![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB)](#)
@@ -35,7 +35,7 @@ Welcome to **WhoDat?**, an interactive web-based NBA guessing game where your kn
 
 ---
 
-## ✨ **Planned Features**
+## **Planned Features**
 
 * [ ] Leaderboards
 * [ ] Multiplayer mode
