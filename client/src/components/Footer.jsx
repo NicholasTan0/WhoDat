@@ -12,6 +12,7 @@ function Footer() {
                 referrerPolicy="strict-origin-when-cross-origin" 
                 allowFullScreen
                 loading='lazy'/> */}
+            <span>@ 2025 WhoDat</span>
         </footer>
     )
 }

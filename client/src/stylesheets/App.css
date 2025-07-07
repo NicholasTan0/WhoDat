@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  min-width: 100%;
+  width: 100vw;
   background-color: tan;
 }
 
@@ -14,6 +14,8 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* min-height: 80vh; */
+  /* min-width: 100vw; */
 }
 
 input {
@@ -128,12 +130,13 @@ input {
   overflow-y: auto;
   width: 100%;
   z-index: 10;
+  scrollbar-color: transparent;
 }
 
 .search-result {
-  /* padding: 10px 0px; */
+  padding-left: 10px;
   cursor: pointer;
-  width: 100%;
+  width: min-content;
   color: black;
 }
 
@@ -220,17 +223,23 @@ input {
 }
 
 #start-button {
-  position: absolute; 
-  background-color: limegreen;
+  position: absolute;
   color: white;
   transition: all 0.2s ease;
   border: 2px solid black;
   /* font-weight: bold; */
 }
 
-#start-button:hover {
-  color: black;
-  background-color: lime;
+.EASY{
+  background-color: green;
+}
+
+.NORMAL{
+  background-color: goldenrod;
+}
+
+.HARD{
+  background-color: red;
 }
 
 #lives{
@@ -344,7 +353,7 @@ td button{
 #startModal{
   color: #013141;
   overflow: hidden;
-  max-width: 75vw;
+  max-width: 40vw;
   text-align: left;
   /* height: auto; */
   background-color: #ededed;
@@ -371,4 +380,14 @@ td button{
 
 #startModal img{
   height: 64px;
+  /* cursor: pointer; */
+}
+
+#startModal img:hover {
+  transform: rotate(360deg);
+  transition: transform 0.3s ease;
+}
+
+#give-up-button{
+  margin: 10px;
 }

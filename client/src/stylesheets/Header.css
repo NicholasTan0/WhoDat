@@ -11,7 +11,6 @@ header {
 
 #logo {
     height: 80px;
-    cursor: pointer;
 }
 
 #info {
@@ -71,8 +70,8 @@ header {
 .header-container dialog {
   color: #013141;
   overflow: hidden;
-  width: 400px;
-  height: 375px;
+  max-width: 400px;
+  /* height: 375px; */
   background-color: #ededed;
   border: none;
   border-radius: 16px;
@@ -110,7 +109,23 @@ header {
   margin: 16px 0;
 }
 
-.ball-container {
+.how-to-play svg {
+  margin: 0px 5px;
+}
+
+.settings{
+  display: flex;
+  /* align-items: center; */
+  flex-direction: column;
+  padding: 8px;
+}
+
+.menu-info{
+  display: flex;
+  align-items: center;
+}
+
+/* .ball-container {
   position: relative;
   display: flex;
   justify-content: center;
@@ -118,11 +133,12 @@ header {
 }
 
 .how-to-play img {
+  bottom: 0px;
   position: absolute;
   height: 56px;
   transition: transform 0.2s ease;
   cursor: pointer;
-}
+} */
 
 .how-to-play img:hover {
   transform: rotate(360deg);

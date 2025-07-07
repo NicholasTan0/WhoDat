@@ -35,6 +35,7 @@ function Main({
     const [showHeight, setShowHeight] = useState(false);
     const [showCollege, setShowCollege] = useState(false);
     const [showNumber, setShowNumber] = useState(false);
+    const [originalLives, setOriginalLives] = useState(lives);
 
     const [duration, setDuration] = useState(timeLimit * 1000); 
     const [timeLeft, setTimeLeft] = useState(duration);
@@ -94,23 +95,27 @@ function Main({
     useEffect(reset, [enableTime]);
 
     useEffect(()=>{
-        if(lives === 0) alert("Oops! Better luck next time. 🏀");
+        console.log(lives);
+        console.log("OG:" + originalLives)
+        if(lives <= 0) {
+            alert("Oops! Better luck next time. 🏀"); 
+            clearAll();
+            setLives(originalLives);
+        }
     },[lives])
 
     useEffect(()=>{
         if(currentPlayer !== null && enableTime) start();
     },[currentPlayer]) 
 
-    const secondsDisplay = Math.floor(timeLeft / 1000);
-    const millisecondsDisplay = Math.floor((timeLeft % 1000) / 10)
+    const secondsDisplay = Math.ceil(timeLeft / 1000);
+    const millisecondsDisplay = Math.ceil((timeLeft % 1000) / 10)
         .toString()
         .padStart(2, "0");
 
     const modal = useRef(null);
 
     const startModal = useRef(null);
-
-    // var originalLives = lives;
 
     useEffect(() => {
         clearAll();
@@ -204,7 +209,7 @@ function Main({
         setTimeout(()=>{
             if(enableTime) reset();
             modal.current.close();
-            generateFourPlayers();
+            if(lives > 1) generateFourPlayers();
             setGuess(null);
             setShowTeam(false);
             setShowPosition(false);
@@ -248,25 +253,26 @@ function Main({
 
     const handleChangeDifficulty = (newDifficulty) => {
         if(enableTime) reset();
-        if(streak > 0){
-            if(confirm(`Are you sure you want to change difficulties?`)){
-                switch (difficulty) {
-                case 'EASY':
-                    if(streak > personalBestEasy) setPersonalBestEasy(streak);
-                    break;
-                case 'NORMAL':
-                    if(streak > personalBestNormal) setPersonalBestNormal(streak);
-                    break;
-                case 'HARD':
-                    if(streak > personalBestHard) setPersonalBestHard(streak);
-                    break;
-                }
-                setStreak(0);
-                setDifficulty(newDifficulty);
-                clearAll();
-                generateFourPlayers();
+        const message = "Are you sure you want to change difficulties?" + (enableLives ? "\n• Your lives will be reset" : "") + (enableTime ? "\n• The timer will start immediately." : "");
+        if(confirm(message)){
+            switch (difficulty) {
+            case 'EASY':
+                if(streak > personalBestEasy) setPersonalBestEasy(streak);
+                break;
+            case 'NORMAL':
+                if(streak > personalBestNormal) setPersonalBestNormal(streak);
+                break;
+            case 'HARD':
+                if(streak > personalBestHard) setPersonalBestHard(streak);
+                break;
             }
+            setLives(originalLives);
+            setStreak(0);
+            setDifficulty(newDifficulty);
+            clearAll();
+            generateFourPlayers();
         }
+        
         else{
             setStreak(0);
             setDifficulty(newDifficulty);
@@ -332,7 +338,7 @@ function Main({
                 <img id='playerImg' src={`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${currentPlayer.id}.png&w=350&h=254`} alt='Guess the player' onError={()=>generateFourPlayers()} style={{filter: (difficulty=="HARD" && !isExploding) ? 'brightness(0%)' : ''}}></img> : 
                 <div className='silhouette-container'>
                     <img width='436px' style={{marginTop: '20px'}} src={silhouette}></img>
-                    <button onClick={()=>generateFourPlayers()} id='start-button'>Start Game!</button>
+                    <button onClick={()=>generateFourPlayers()} id='start-button' className={difficulty}>Start Game!</button>
                 </div>
             }
 
@@ -355,7 +361,7 @@ function Main({
                 <div className='modal-container'>
                     <h1>Welcome to <span>WhoDat!</span></h1>
                     <img src={favicon}/>
-                    <h3>- NBA player headshot guessing game -</h3>
+                    <h3>NBA Player Guessing Game</h3>
                     <p>Note: Some players may not appear due to their headshot not currently being available on ESPN. Additionally, some hints may be missing information due to the same reason.</p>
                     <button onClick={()=>startModal.current.close()}>Close</button>
                 </div>
@@ -423,7 +429,7 @@ function Main({
                     </table>
                 </div>}
 
-            {currentPlayer && <button onClick={handleWrong}>Give up?</button>}
+            {currentPlayer && <button id='give-up-button' onClick={handleWrong}>Give up?</button>}
         </main>
     )
 }
