@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import '../stylesheets/App.css'
 import silhouette from '../assets/silhouette.png';
+import favicon from '../assets/favicon.png'
 
 function Main({
     enableLives, 
@@ -90,16 +91,10 @@ function Main({
         return () => clearInterval(intervalRef.current);
     }, []);
 
-    // useEffect(()=>{
-    //     if(timeLeft === 0 && !running){
-    //         handleWrong();
-    //     }
-    // },[running, timeLeft])
-
     useEffect(reset, [enableTime]);
 
     useEffect(()=>{
-        if(lives === 0) alert("SHUTUP");
+        if(lives === 0) alert("Oops! Better luck next time. 🏀");
     },[lives])
 
     useEffect(()=>{
@@ -113,10 +108,13 @@ function Main({
 
     const modal = useRef(null);
 
-    var originalLives = lives;
+    const startModal = useRef(null);
+
+    // var originalLives = lives;
 
     useEffect(() => {
         clearAll();
+        startModal.current.showModal();
     },[])
 
     const BASE_URL = import.meta.env.VITE_API_URL;
@@ -282,7 +280,7 @@ function Main({
             hearts.push(<span key={i}>❤️</span>);
         }
         if(hearts.length > 0) return hearts;
-        return <b>0</b>;
+        return <b style={{color: 'red'}}>0</b>;
     }
 
     return (
@@ -350,6 +348,16 @@ function Main({
                         <div style={{fontSize: '4em'}}>❌</div>
                         <div><b>{currentPlayer?.name}</b></div>
                     </div>}
+                </div>
+            </dialog>
+
+            <dialog id='startModal' ref={startModal}>
+                <div className='modal-container'>
+                    <h1>Welcome to <span>WhoDat!</span></h1>
+                    <img src={favicon}/>
+                    <h3>- NBA player headshot guessing game -</h3>
+                    <p>Note: Some players may not appear due to their headshot not currently being available on ESPN. Additionally, some hints may be missing information due to the same reason.</p>
+                    <button onClick={()=>startModal.current.close()}>Close</button>
                 </div>
             </dialog>
             

@@ -340,3 +340,35 @@ td button{
 .timer button:hover{
   transform:none
 }
+
+#startModal{
+  color: #013141;
+  overflow: hidden;
+  max-width: 75vw;
+  text-align: left;
+  /* height: auto; */
+  background-color: #ededed;
+  border: none;
+  border-radius: 16px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+#startModal button{
+  color: inherit;
+  outline-color: inherit;
+}
+
+#startModal button:hover{
+  color: inherit;
+  outline: 2px solid black;
+}
+
+#startModal span{
+  color: darkorange;
+}
+
+#startModal img{
+  height: 64px;
+}
