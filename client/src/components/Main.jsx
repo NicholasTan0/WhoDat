@@ -44,6 +44,51 @@ function Main({
     const endTimeRef = useRef(null);
     const intervalRef = useRef(null);
 
+
+    // At the top of your component, load players once
+const [allPlayers, setAllPlayers] = useState([]);
+
+useEffect(() => {
+    // Load players.json once when component mounts
+    fetch('/players.json')
+        .then(response => response.json())
+        .then(data => setAllPlayers(data))
+        .catch(err => console.error('Failed to load players:', err));
+    console.log("Yeah this ran. dont sweat it ")
+}, []);
+
+const generateFourPlayers = (id) => {
+    // Filter out the excluded player
+    const filtered = allPlayers.filter(player => player.id !== id);
+    
+    // Shuffle array
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    
+    // Get 4 random players
+    const fourPlayers = shuffled.slice(0, 4);
+    
+    setTimeout(() => {
+        setOptions(fourPlayers);
+        setPlayer(fourPlayers[Math.floor(Math.random() * 4)]);
+    }, 0);
+};
+
+const handleInput = (value) => {
+    setInput(value);
+    
+    if (!value) {
+        setResults([]);
+        return;
+    }
+    
+    const query = value.toLowerCase();
+    const filtered = allPlayers.filter(player =>
+        player.name.toLowerCase().replace(/[^a-z-\s]/g, '').includes(query)
+    );
+    
+    setResults(filtered);
+};
+
     const start = () => {
         if (running) {
             return;
@@ -138,27 +183,27 @@ function Main({
         setShowNumber(false);
     }
 
-    const generateFourPlayers = async (id) => {
-        const response = await fetch(`${BASE_URL}/random-four?excludeId=${id}`);
-        let players = await response.json();
-        setTimeout(() => {
-        setOptions(players);
-        setPlayer(players[Math.floor(Math.random() * 4)]);
-        }, 0);
-    };
+    // const generateFourPlayers = async (id) => {
+    //     const response = await fetch(`${BASE_URL}/random-four?excludeId=${id}`);
+    //     let players = await response.json();
+    //     setTimeout(() => {
+    //     setOptions(players);
+    //     setPlayer(players[Math.floor(Math.random() * 4)]);
+    //     }, 0);
+    // };
 
-    const handleInput = (value) => {
-        setInput(value);
+    // const handleInput = (value) => {
+    //     setInput(value);
         
-        fetch(`${BASE_URL}/search?name=${encodeURIComponent(value)}`)
-        .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            if(value) setResults(data);
-            else setResults([]);
-        });
-    };
+    //     fetch(`${BASE_URL}/search?name=${encodeURIComponent(value)}`)
+    //     .then((response) => {
+    //         return response.json();
+    //     })
+    //     .then((data) => {
+    //         if(value) setResults(data);
+    //         else setResults([]);
+    //     });
+    // };
 
     const handleRight = () => {
         setCorrect(true);
