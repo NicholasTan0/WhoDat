@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import '../stylesheets/App.css'
+// import '../stylesheets/App.css'
 import silhouette from '../assets/silhouette.png';
-import favicon from '../assets/favicon.png'
+// import favicon from '../assets/favicon.png'
 
 function Main({
     enableLives, 
@@ -382,7 +382,7 @@ const handleInput = (value) => {
             {currentPlayer ? 
                 <img id='playerImg' src={`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${currentPlayer.id}.png&w=350&h=254`} alt='Guess the player' onError={()=>generateFourPlayers()} style={{filter: (difficulty=="HARD" && !isExploding) ? 'brightness(0%)' : ''}}></img> : 
                 <div className='silhouette-container'>
-                    <img width='436px' style={{marginTop: '20px'}} src={silhouette}></img>
+                    <img width='600px' style={{marginTop: '20px'}} src={silhouette}></img>
                     <button onClick={()=>generateFourPlayers()} id='start-button' className={difficulty}>Start Game!</button>
                 </div>
             }
