@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Stopwatch from '../components/Stopwatch';
 import Countdown from '../components/Countdown';
+import Lock from '../components/Lock';
 
 export default function Game({ difficulty, setDifficulty }) {
     const inputRef = useRef(null);
@@ -29,6 +30,11 @@ export default function Game({ difficulty, setDifficulty }) {
     const [isPaused, setIsPaused] = useState(false);
     const [letterIndex, setLetterIndex] = useState(0);
     const [showBlank, setShowBlank] = useState(false);
+    const [hiddenName, setHiddenName] = useState(null);
+    const [points, setPoints] = useState(0);
+    const [totalPoints, setTotalPoints] = useState(0);
+
+    const POINT_FACTOR = 2;
 
     function formatTimeLeft(difference){
         if (difference <= 0) {
@@ -49,6 +55,12 @@ export default function Game({ difficulty, setDifficulty }) {
             .then(data => setAllPlayers(data))
             .catch(err => console.error('Failed to load players:', err));
     }, []);
+
+    useEffect(()=>{
+        if(currentPlayer !== null && currentPlayer.name !== "null"){
+            setHiddenName(Array.from(currentPlayer.name).map((letter, i) => /^[a-zA-Z]$/.test(letter) ? "_" : letter));
+        }
+    }, [currentPlayer])
 
     useEffect(()=>{
         if(currentPlayer && timeLeft.expired === true){
@@ -78,6 +90,7 @@ export default function Game({ difficulty, setDifficulty }) {
         if (randomFour.length < 4) return;
         const player = randomFour[Math.floor(Math.random() * randomFour.length)];
         setCurrentPlayer(player);
+        setPoints(Math.ceil(player.notoriety + 1) * 10)
         setSilhouette(`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${player.id}.png`);
     }, [randomFour]);
 
@@ -103,7 +116,7 @@ export default function Game({ difficulty, setDifficulty }) {
             if(difficulty === "hard"){
                 handleAnswer(input);
             }
-            else{   //difficulty is medium
+            else{
                 if(results.length > 0 && input.toLowerCase() === results[0].name.toLowerCase())
                     handleAnswer(input);
                 else if(results.length > 0 && index === -1){
@@ -244,19 +257,58 @@ export default function Game({ difficulty, setDifficulty }) {
         return userIndex === user.length;
     }
 
+    const revealNextLetter = () => {
+        if (!currentPlayer) return;
+
+        setHiddenName(prev => {
+            const index = prev.findIndex(letter => letter === "_");
+
+            if (index === -1) return prev;
+
+            const updated = [...prev];
+            updated[index] = currentPlayer.name[index];
+
+            return updated;
+        });
+
+        setPoints(Math.floor(points/POINT_FACTOR))
+    };
+
+    const revealRandomLetter = () => {
+        if (!currentPlayer) return;
+
+        setHiddenName(prev => {
+            const unrevealed = prev
+                .map((letter, index) => letter === "_" ? index : null)
+                .filter(index => index !== null);
+
+            if (unrevealed.length === 0) return prev;
+
+            const randomIndex =
+                unrevealed[Math.floor(Math.random() * unrevealed.length)];
+
+            const updated = [...prev];
+            updated[randomIndex] = currentPlayer.name[randomIndex];
+
+            return updated;
+        });
+    };
+
     const handleAnswer = (name) => {
         setInput(currentPlayer.name);
         setGuessed(true);
         setIsPaused(true);
         setResults([]);
         setIndex(-1);
-        setLetterIndex(1);
+        setLetterIndex(0);
         if(isCorrect(name, currentPlayer.name)){
             setCorrect(true);
             setPrevStreak(streak)
             setStreak(streak + 1)
+            setTotalPoints(totalPoints + points);
             setTimeout(() => {
                 setInput("");
+                setShowBlank(false);
                 setCorrect(false);
                 setRound(round + 1);
                 setGuessed(false);
@@ -271,6 +323,7 @@ export default function Game({ difficulty, setDifficulty }) {
             // setInput(currentPlayer.name)
             setTimeout(() => {
                 setInput("");
+                setShowBlank(false);
                 setRound(round + 1);
                 setGuessed(false);
                 setIsPaused(false);
@@ -293,9 +346,9 @@ export default function Game({ difficulty, setDifficulty }) {
                         <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
                     </svg>
                 </button>
-                <div className='flex relative gap-8 text-black px-8 py-12 border-2 shadow-lg border-black bg-yellow-500 invisible'>
+                <div className='flex relative gap-8 text-black px-8 py-12 border-2 shadow-lg border-black bg-yellow-500'>
                     <div className='absolute size-4 top-2 left-2 rounded-full bg-white border-black border-2'/>
-                    <div className='flex flex-col justify-center items-center text-5xl gap-8 w-full'>
+                    <div className='flex flex-col text-5xl gap-8 w-full'>
                         <div className='flex flex-row'>
                             Streak: {streak}
                             <div className='w-4'>
@@ -305,6 +358,12 @@ export default function Game({ difficulty, setDifficulty }) {
                         </div>
                         <div className='flex flex-row'>
                             Best: {best}
+                        </div>
+                        <div className='flex flex-row'>
+                            Points: {points}
+                        </div>
+                        <div className='flex flex-row'>
+                            Total: {totalPoints}
                         </div>
                     </div>
                 </div>
@@ -396,7 +455,7 @@ export default function Game({ difficulty, setDifficulty }) {
                         </div>
                         <button 
                             className='cursor-pointer shrink-0 group flex justify-center items-center px-4 bg-offwhite ml-0 border-2 border-black hover:bg-neutral-200'
-                            title='Submit'
+                            title='Submit Name'
                             onClick={()=>{
                                 if(input.length > 0) handleAnswer(input);
                             }}
@@ -446,34 +505,36 @@ export default function Game({ difficulty, setDifficulty }) {
                     Hints
                 </div>
                 <ul className='flex flex-col gap-4'>
-                    <button className='flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer'
-                        onClick={() => {setShowBlank(!showBlank)}}
-                    >
-                        <div className='absolute top-2 left-2'>
-                            <svg className='w-8 h-8' xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M226.67-636h380v-90.67q0-52.77-36.92-89.72-36.93-36.94-89.67-36.94-52.75 0-89.75 36.94-37 36.95-37 89.72h-66.66q0-80.33 56.57-136.83Q399.81-920 480.07-920q80.26 0 136.76 56.55 56.5 56.55 56.5 136.78V-636h60q27.5 0 47.09 19.58Q800-596.83 800-569.33v422.66q0 27.5-19.58 47.09Q760.83-80 733.33-80H226.67q-27.5 0-47.09-19.58Q160-119.17 160-146.67v-422.66q0-27.5 19.58-47.09Q199.17-636 226.67-636Zm0 489.33h506.66v-422.66H226.67v422.66Zm308.5-155.85Q558-325.04 558-356.67q0-31-22.95-55.16Q512.11-436 479.89-436t-55.06 24.17Q402-387.67 402-356.33q0 31.33 22.95 53.83 22.94 22.5 55.16 22.5t55.06-22.52Zm-308.5 155.85v-422.66 422.66Z"/></svg>
-                        </div>
-                        <div>Click to reveal:</div>
-                        <div>Fill-in-the-blank</div>
-                        <div className='tracking-widest'>{showBlank && Array.from(currentPlayer.name).map((letter, i) => /^[a-zA-Z]$/.test(letter) ? "_" : letter)}</div>
-                    </button>
-                    <button className='flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer'
+                    <button className={`flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 ${showBlank ? "" : "cursor-pointer"}`}
                         onClick={() => {
-                            if (letterIndex >= currentPlayer.name.length) return;
-
-                            const nextIndex =
-                                currentPlayer.name[letterIndex] === " "
-                                    ? letterIndex + 2
-                                    : letterIndex + 1;
-
-                            setInput(currentPlayer.name.slice(0, nextIndex));
-                            setLetterIndex(nextIndex);
+                            setShowBlank(true)
+                            setPoints(Math.floor(points/2))
                         }}
                     >
                         <div className='absolute top-2 left-2'>
-                            <svg className='w-8 h-8' xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M226.67-80q-27.5 0-47.09-19.58Q160-119.17 160-146.67v-422.66q0-27.5 19.58-47.09Q199.17-636 226.67-636h60v-90.67q0-80.23 56.57-136.78T480.07-920q80.26 0 136.76 56.55 56.5 56.55 56.5 136.78V-636h60q27.5 0 47.09 19.58Q800-596.83 800-569.33v422.66q0 27.5-19.58 47.09Q760.83-80 733.33-80H226.67Zm0-66.67h506.66v-422.66H226.67v422.66Zm308.5-155.85Q558-325.04 558-356.67q0-31-22.95-55.16Q512.11-436 479.89-436t-55.06 24.17Q402-387.67 402-356.33q0 31.33 22.95 53.83 22.94 22.5 55.16 22.5t55.06-22.52ZM353.33-636h253.34v-90.67q0-52.77-36.92-89.72-36.93-36.94-89.67-36.94-52.75 0-89.75 36.94-37 36.95-37 89.72V-636ZM226.67-146.67v-422.66 422.66Z"/></svg>
+                            <Lock locked={!showBlank}/>
+                        </div>
+                        <div className='absolute top-2 right-2 text-[16px]'>
+                            {currentPlayer && !showBlank && <div>{points === 0 ? "No more points!" : <div>-{Math.ceil(points/POINT_FACTOR)}</div>}</div>}
+                        </div>
+                        {showBlank ? <div className='tracking-widest text-4xl min-h-18 flex justify-center items-center'>{hiddenName.join("")}</div> : 
+                        <div>
+                            <div>Click to reveal:</div>
+                            <div>Fill-in-the-blank</div>
+                        </div>}
+                    </button>
+                    <button className='flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
+                        disabled={!showBlank || !hiddenName.includes("_")}
+                        onClick={revealNextLetter}
+                    >
+                        <div className='absolute top-2 left-2'>
+                            <Lock locked={!showBlank || !hiddenName.includes("_")}/>
+                        </div>
+                        <div className='absolute top-2 right-2 text-[16px]'>
+                            {showBlank && <div>{points === 0 ? "No more points!" : <div>-{Math.ceil(points/POINT_FACTOR)}</div>}</div>}
                         </div>
                         <div>Click to reveal:</div>
-                        <div>A letter</div>
+                        <div>Letter</div>
                     </button>
                 </ul>
             </section>

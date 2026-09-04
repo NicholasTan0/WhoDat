@@ -76,7 +76,7 @@ const getPlayers = async () => {
                     age,
                     height,
                     college,
-                    teamName,
+                    team: teamName,
                     id
                 });
             });
@@ -91,42 +91,187 @@ const getPlayers = async () => {
     console.log(`Retrieved ${players.length} players`);
     console.log("Retrieving player statistics...");
 
-    // Limit concurrent player requests
     const batchSize = 10;
-
     for (let i = 0; i < players.length; i += batchSize) {
         const batch = players.slice(i, i + batchSize);
 
         await Promise.all(batch.map(async (player) => {
             const playerURL =
-                `https://www.espn.com/nba/player/_/id/${player.id}`;
+                `https://www.espn.com/nba/player/stats/_/id/${player.id}`;
 
             try {
                 const response = await axios.get(playerURL);
                 const $ = cheerio.load(response.data);
 
-                const tds = $('[data-testid="playerStats"]')
-                    .find('.Table__Scroller table tbody tr')
-                    .first()
-                    .find('td');
+                const tables = $('table');
 
-                const stats = {
-                    rebounds: Number(tds.eq(5).text().trim()),
-                    assists: Number(tds.eq(6).text().trim()),
-                    blocks: Number(tds.eq(7).text().trim()),
-                    steals: Number(tds.eq(8).text().trim()),
-                    points: Number(tds.eq(11).text().trim())
+                const getTdText = (cells, index) => {
+                    return Number($(cells[index - 1]).text().trim());
                 };
 
-                const notoriety =
-                    stats.points +
-                    (stats.rebounds * 0.5) +
-                    (stats.assists * 0.75) +
-                    (stats.blocks * 1.5) +
-                    (stats.steals * 1.5);
+                const table2 = tables.eq(1);
+                const lastRowTable2 = table2.find('tbody tr').last();
+                const tdsTable2 = lastRowTable2.find('td');
 
-                player.stats = stats;
-                player.notoriety = notoriety;
+                const secondLastRowTable2 = table2.find('tbody tr').eq(-2);
+                const secondTdsTable2 = secondLastRowTable2.find('td');
+
+                const rpg = getTdText(secondTdsTable2, 12);
+                const apg = getTdText(secondTdsTable2, 13);
+                const bpg = getTdText(secondTdsTable2, 14);
+                const spg = getTdText(secondTdsTable2, 15);
+                const ppg = getTdText(secondTdsTable2, 18);
+
+                const gamesPlayed = getTdText(tdsTable2, 1);
+                const mpg = getTdText(tdsTable2, 3);
+
+                const table4 = tables.eq(3);
+                const lastRowTable4 = table4.find('tbody tr').last();
+                const tdsTable4 = lastRowTable4.find('td');
+
+                const careerTotalRebounds = getTdText(tdsTable4, 9);
+                const careerTotalAssists = getTdText(tdsTable4, 10);
+                const careerTotalPoints = getTdText(tdsTable4, 15);
+
+                const element = $('div:contains(", Pk")').first();
+
+                let draftPick = 0;
+
+                if (element.length > 0) {
+                    const text = element.text().trim();
+                    const match = text.match(/Pk\s*(\d+)/i);
+                    if (match) draftPick = parseInt(match[1], 10);
+                }
+
+                player.pick = draftPick;
+                player.stats = {
+                    gamesPlayed,
+                    careerTotalPoints,
+                    careerTotalRebounds,
+                    careerTotalAssists,
+                    ppg,
+                    rpg,
+                    apg,
+                    bpg,
+                    spg,
+                    mpg
+                };
+
+                // ========================================
+                // START
+                // ========================================
+
+                let points = 1000;
+
+                // ========================================
+                // 1. DRAFT PEDIGREE
+                // ========================================
+
+                if (gamesPlayed === 0) {
+
+                    if (draftPick >= 1 && draftPick <= 60) {
+
+                        const draftScore =
+                            600 +
+                            400 * Math.pow(
+                                (draftPick - 1) / 59,
+                                0.35
+                            );
+
+                        points = Math.min(points, draftScore);
+                    }
+                }
+
+
+                // ========================================
+                // 2. NBA TENURE
+                // ========================================
+
+                const tenureScore =
+                    gamesPlayed > 0
+                        ? Math.min(
+                            1,
+                            Math.log10(gamesPlayed + 1) /
+                            Math.log10(1001)
+                        )
+                        : 0;
+
+                const tenureReduction =
+                    100 * tenureScore;
+
+                points -= tenureReduction;
+
+
+                // ========================================
+                // 3. RECENT PRODUCTION
+                // ========================================
+
+                const ppgScore =
+                    Math.min(1, ppg / 30);
+
+                const apgScore =
+                    Math.min(1, apg / 10);
+
+                const rpgScore =
+                    Math.min(1, rpg / 15);
+
+                const mpgScore =
+                    Math.min(1, mpg / 36);
+
+                const recentScore =
+                    0.50 * ppgScore +
+                    0.20 * apgScore +
+                    0.15 * rpgScore +
+                    0.15 * mpgScore;
+
+                const recentReduction =
+                    650 * recentScore;
+
+                points -= recentReduction;
+
+
+                // ========================================
+                // 4. CAREER PRODUCTION
+                // ========================================
+
+                const careerPointsScore =
+                    Math.min(
+                        1,
+                        Math.sqrt(careerTotalPoints / 20000)
+                    );
+
+                const careerAssistsScore =
+                    Math.min(
+                        1,
+                        Math.sqrt(careerTotalAssists / 7000)
+                    );
+
+                const careerReboundsScore =
+                    Math.min(
+                        1,
+                        Math.sqrt(careerTotalRebounds / 10000)
+                    );
+
+                const careerScore =
+                    0.50 * careerPointsScore +
+                    0.25 * careerAssistsScore +
+                    0.25 * careerReboundsScore;
+
+                const careerReduction =
+                    150 * careerScore;
+
+                points -= careerReduction;
+
+
+                // ========================================
+                // 5. FINAL
+                // ========================================
+
+                const gamePoints = Math.round(
+                    Math.min(1000, Math.max(100, points))
+                );
+
+                player.points = gamePoints;
 
             } catch (error) {
                 console.error(
@@ -147,7 +292,7 @@ const getPlayers = async () => {
 
     fs.writeFileSync(
         '../client/public/players.json',
-        JSON.stringify(players, null, 2)
+        JSON.stringify(players, null, 1)
     );
 
     console.log(`Wrote ${players.length} players to players.json`);
