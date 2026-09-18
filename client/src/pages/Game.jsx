@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import Stopwatch from '../components/Stopwatch';
 import Countdown from '../components/Countdown';
 import Lock from '../components/Lock';
+import Toggle from '../components/Toggle';
 
 export default function Game({ difficulty, setDifficulty }) {
-    const inputRef = useRef(null);
-    const itemRefs = useRef([]);
-
+    const [startGame, setStartGame] = useState(false);
     const [allPlayers, setAllPlayers] = useState([]);
     const [randomFour, setRandomFour] = useState([]);
     const [currentPlayer, setCurrentPlayer] = useState(null);
@@ -25,14 +23,22 @@ export default function Game({ difficulty, setDifficulty }) {
     const [guessed, setGuessed] = useState(false);
     const [wrongAnswer, setWrongAnswer] = useState(null);
     const [showTimer, setShowTimer] = useState(false);
-    const [isRunning, setIsRunning] = useState(false);
     const [timeLeft, setTimeLeft] = useState(() => formatTimeLeft(60000));
-    const [isPaused, setIsPaused] = useState(false);
-    const [letterIndex, setLetterIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(true);
     const [showBlank, setShowBlank] = useState(false);
+    const [showTeam, setShowTeam] = useState(false);
+    const [show50, setShow50] = useState([])
     const [hiddenName, setHiddenName] = useState(null);
     const [points, setPoints] = useState(0);
     const [totalPoints, setTotalPoints] = useState(0);
+    const [durationMs, setDurationMs] = useState(30000);
+    const [autoplay, setAutoplay] = useState(true);
+    const [isOpen, setIsOpen] = useState(true);
+    const [modal, setModal] = useState("settings");
+
+    const inputRef = useRef(null);
+    const itemRefs = useRef([]);
+    const remainingMsRef = useRef(durationMs);
 
     const POINT_FACTOR = 2;
 
@@ -41,11 +47,11 @@ export default function Game({ difficulty, setDifficulty }) {
         return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
         }
         return {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-        expired: false
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((difference / 1000 / 60) % 60),
+            seconds: Math.floor((difference / 1000) % 60),
+            expired: false
         };
     };
 
@@ -57,7 +63,7 @@ export default function Game({ difficulty, setDifficulty }) {
     }, []);
 
     useEffect(()=>{
-        if(currentPlayer !== null && currentPlayer.name !== "null"){
+        if(currentPlayer !== null && currentPlayer.name !== null){
             setHiddenName(Array.from(currentPlayer.name).map((letter, i) => /^[a-zA-Z]$/.test(letter) ? "_" : letter));
         }
     }, [currentPlayer])
@@ -69,7 +75,13 @@ export default function Game({ difficulty, setDifficulty }) {
     }, [timeLeft.expired])
 
     useEffect(()=>{
-        inputRef.current?.focus();
+        setTimeLeft(() => formatTimeLeft(durationMs))
+    }, [durationMs])
+
+    useEffect(()=>{
+        if(startGame){
+            inputRef.current?.focus();
+        }
     }, [guessed])
 
     useEffect(() => {
@@ -81,16 +93,21 @@ export default function Game({ difficulty, setDifficulty }) {
     }, [index]);
 
     useEffect(()=>{
-        if(allPlayers.length >= 4){
-            generateFour()
+        if(startGame){
+            if(allPlayers.length >= 4){
+                generateFour()
+            }
+            if(showTimer){
+                setIsPaused(false)
+            }
         }
-    }, [allPlayers])
+    }, [startGame])
 
     useEffect(() => {
         if (randomFour.length < 4) return;
         const player = randomFour[Math.floor(Math.random() * randomFour.length)];
         setCurrentPlayer(player);
-        setPoints(Math.ceil(player.notoriety + 1) * 10)
+        setPoints(player.points)
         setSilhouette(`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${player.id}.png`);
     }, [randomFour]);
 
@@ -100,6 +117,7 @@ export default function Game({ difficulty, setDifficulty }) {
             setResults([]);
             return;
         }
+        if(difficulty === "hard") return;
         const query = e.target.value.toLowerCase();
         const filtered = allPlayers.filter(player =>
             player.name.toLowerCase().replace(/[^a-z'\-\s]/g, '').replace(/\s+/g, ' ').includes(query)
@@ -202,31 +220,15 @@ export default function Game({ difficulty, setDifficulty }) {
         const user = normalize(userInput);
         const correct = normalize(correctAnswer);
 
-        // Exact match
         if (user === correct) return true;
 
-        /*
-        * Remove periods from both strings.
-        * This makes periods optional.
-        *
-        * "A.J. Dybantsa" -> "AJ Dybantsa"
-        * "AJ Dybantsa"   -> "AJ Dybantsa"
-        */
         const userNoPeriods = user.replace(/\./g, "");
         const correctNoPeriods = correct.replace(/\./g, "");
 
-        // If they don't match without periods, it's wrong.
         if (userNoPeriods !== correctNoPeriods) {
             return false;
         }
 
-        /*
-        * At this point, the only difference between the two
-        * strings should be periods.
-        *
-        * Check that every period the user entered exists in
-        * the same position as a period in the correct answer.
-        */
         for (let i = 0; i < user.length; i++) {
             if (user[i] === ".") {
                 if (correct[i] !== ".") {
@@ -235,13 +237,10 @@ export default function Game({ difficulty, setDifficulty }) {
             }
         }
 
-        // Also make sure the user didn't omit a character in
-        // a way that causes the positions to shift.
         let userIndex = 0;
 
         for (let correctIndex = 0; correctIndex < correct.length; correctIndex++) {
             if (correct[correctIndex] === ".") {
-                // Period is optional, so don't require it
                 if (user[userIndex] === ".") {
                     userIndex++;
                 }
@@ -249,7 +248,6 @@ export default function Game({ difficulty, setDifficulty }) {
                 if (user[userIndex] !== correct[correctIndex]) {
                     return false;
                 }
-
                 userIndex++;
             }
         }
@@ -274,81 +272,91 @@ export default function Game({ difficulty, setDifficulty }) {
         setPoints(Math.floor(points/POINT_FACTOR))
     };
 
-    const revealRandomLetter = () => {
-        if (!currentPlayer) return;
+    // const revealRandomLetter = () => {
+    //     if (!currentPlayer) return;
 
-        setHiddenName(prev => {
-            const unrevealed = prev
-                .map((letter, index) => letter === "_" ? index : null)
-                .filter(index => index !== null);
+    //     setHiddenName(prev => {
+    //         const unrevealed = prev
+    //             .map((letter, index) => letter === "_" ? index : null)
+    //             .filter(index => index !== null);
 
-            if (unrevealed.length === 0) return prev;
+    //         if (unrevealed.length === 0) return prev;
 
-            const randomIndex =
-                unrevealed[Math.floor(Math.random() * unrevealed.length)];
+    //         const randomIndex =
+    //             unrevealed[Math.floor(Math.random() * unrevealed.length)];
 
-            const updated = [...prev];
-            updated[randomIndex] = currentPlayer.name[randomIndex];
+    //         const updated = [...prev];
+    //         updated[randomIndex] = currentPlayer.name[randomIndex];
 
-            return updated;
-        });
-    };
+    //         return updated;
+    //     });
+    // };
 
     const handleAnswer = (name) => {
+        const responseTime = durationMs - remainingMsRef.current;
+        const earnedPoints = showTimer
+            ? Math.round(points * (1 - responseTime / (2 * durationMs)))
+            : points;
+        setPoints(earnedPoints);
         setInput(currentPlayer.name);
         setGuessed(true);
         setIsPaused(true);
         setResults([]);
         setIndex(-1);
-        setLetterIndex(0);
+        setShow50([]);
         if(isCorrect(name, currentPlayer.name)){
             setCorrect(true);
             setPrevStreak(streak)
             setStreak(streak + 1)
-            setTotalPoints(totalPoints + points);
+            setTotalPoints(totalPoints + earnedPoints);
             setTimeout(() => {
-                setInput("");
                 setShowBlank(false);
-                setCorrect(false);
-                setRound(round + 1);
-                setGuessed(false);
                 setWrongAnswer(null);
-                setIsPaused(false);
-                generateFour();
+                if(autoplay){
+                    generateFour();
+                    setRound(round + 1);
+                    setIsPaused(false);
+                    setGuessed(false);
+                    setCorrect(false);
+                    setInput("");
+                }
             }, 1000); 
         }
         else {
             setWrongAnswer(name);
             endStreak();
-            // setInput(currentPlayer.name)
             setTimeout(() => {
-                setInput("");
                 setShowBlank(false);
-                setRound(round + 1);
-                setGuessed(false);
-                setIsPaused(false);
-                generateFour();
                 setWrongAnswer(null);
+                if(autoplay){
+                    generateFour();
+                    setRound(round + 1);
+                    setIsPaused(false);
+                    setGuessed(false);
+                    setInput("");
+                }
             }, 1000); 
         }
     }
-
+    
     return(
         <main className='flex flex-row flex-1 min-h-0'>
             {/* LEFT */}
-            <section className='flex flex-col w-1/5 border-r-3 bg-offwhite p-8 gap-8'>
+            <section className='flex flex-col w-1/5 border-r-3 bg-offwhite/80 p-8 gap-8'>
                 <button 
-                    className='flex justify-center items-center w-min cursor-pointer hover:animate-bounce-horizontal'
+                    className='flex justify-center items-center w-min cursor-pointer gap-3'
                     title='Go Back'
                     onClick={()=>setDifficulty(null)}
                 >
                     <svg className='w-8 h-8' viewBox="0 0 16 16">
                         <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
                     </svg>
+                    <p className='text-xl text-center'>Home</p>
                 </button>
-                <div className='flex relative gap-8 text-black px-8 py-12 border-2 shadow-lg border-black bg-yellow-500'>
+                <div className='flex relative gap-8 text-black px-8 py-12 border-2 shadow-lg border-black bg-yellow-500 overflow-auto'>
                     <div className='absolute size-4 top-2 left-2 rounded-full bg-white border-black border-2'/>
-                    <div className='flex flex-col text-5xl gap-8 w-full'>
+                    <div className='flex flex-col text-[2.3cqi] gap-2 w-full'>
+                        <h1 className='underline font-bold'>Stats</h1>
                         <div className='flex flex-row'>
                             Streak: {streak}
                             <div className='w-4'>
@@ -360,63 +368,87 @@ export default function Game({ difficulty, setDifficulty }) {
                             Best: {best}
                         </div>
                         <div className='flex flex-row'>
-                            Points: {points}
+                            Lives: {"∞"}
                         </div>
+                    </div>
+                </div>
+                <div className='flex relative gap-8 text-black px-8 py-12 border-2 shadow-lg border-black bg-yellow-500 overflow-auto'>
+                    <div className='absolute size-4 top-2 left-2 rounded-full bg-white border-black border-2'/>
+                    <div className='flex flex-col text-[2.3cqi] gap-2 w-full'>
+                        <h1 className='underline font-bold'>Points</h1>
+                        <div className='flex flex-row'>
+                            Maximum: {currentPlayer?.points || 0}
+                        </div>
+                        <div>Current: {points}</div>
                         <div className='flex flex-row'>
                             Total: {totalPoints}
                         </div>
                     </div>
                 </div>
-                <div className='flex flex-col gap-4 mt-auto'>
-                    <div className='text-lg h-min border-2 text-neutral-800 rounded-full py-4 px-8 w-full text-center bg-white hover:underline hover:bg-offwhite active:scale-95 cursor-pointer transition-all'>How to Play</div>
-                    <div className='text-lg h-min border-2 text-neutral-800 rounded-full py-4 px-8 w-full text-center bg-white hover:underline hover:bg-offwhite active:scale-95 cursor-pointer transition-all'>Settings</div>
-                    {/* <div className='text-lg h-min border-2 text-neutral-800 rounded-full py-4 px-8 w-full text-center bg-white hover:underline hover:bg-offwhite active:scale-95 cursor-pointer transition-all'>Learn More</div> */}
+                <div className='mt-auto'>
+                    {/* <div>Lives:</div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 130 130">
+                        <path fill="red" d="M 65,29 C 59,19 49,12 37,12 20,12 7,25 7,42 7,75 25,80 65,118 105,80 123,75 123,42 123,25 110,12 93,12 81,12 71,19 65,29 z"/>
+                    </svg> */}
                 </div>
             </section>
 
             {/* MIDDLE */}
             {/* bg-[radial-gradient(rgba(255,255,255,0.5)_1px,transparent_1px)] bg-size-[32px_32px] */}
-           <section className='relative flex flex-col items-center flex-1 bg-blue'>
+           <section className={`relative flex flex-col items-center flex-1 bg-blue/95 ${!startGame ? 'pointer-events-none brightness-90' : ''}`}>
                 <div className='flex justify-center items-center w-full'>
                     <div className='flex justify-center items-center mx-8 text-white text-5xl w-2/3 font-lg uppercase border-b-2 mt-8 pb-4 mb-4'>
-                        <div>Round {round}</div>
+                        <div>Round {round} &mdash; {difficulty.toUpperCase()}</div>
                         {/* <div>&nbsp;-&nbsp;</div>
                         <div className='flex text-red-500 tracking-widest'>❤︎⁠❤︎⁠❤︎⁠</div> */}
                     </div>
                 </div>
-                <div className='flex justify-center items-center w-full my-4'>
+                <div className='flex justify-center items-center w-full'>
                     {difficulty === "easy" && 
-                    <div className='grid grid-cols-2 grid-rows-2 w-full mx-8 gap-3'>
-                        {randomFour.map((player, i) => (
-                            <button
-                                disabled={guessed}
-                                key={i} 
-                                className={`
-                                    p-4 border-2 border-white w-full h-full text-offwhite transition-all active:scale-95
-                                    ${guessed ? "cursor-not-allowed" : "cursor-pointer hover:bg-offwhite hover:text-blue"}
-                                    ${guessed && player.name === currentPlayer.name ? "bg-green-500!" : ""}
-                                    ${player.name === wrongAnswer ? "bg-red-600! opacity-40" : ""}
-                                    ${guessed && player.name !== currentPlayer.name && player.name !== wrongAnswer ? "opacity-40" : ""}
-                                `}
-                                onClick={()=>handleAnswer(player.name)}
-                            >
-                                <div className={`text-4xl font-bold ${hasLoaded ? "" : "invisible"}`}>
-                                    {player.name}
-                                </div>
-                            </button>
-                        ))}
+                    <div className='flex flex-col justify-center items-center w-full gap-4'>
+                        {showTimer && <div className={`flex mr-2 w-24 shrink-0 justify-center items-center border-3 text-2xl px-4 py-2 ${((timeLeft.minutes === 0) && (timeLeft.seconds <= 10) && (timeLeft.seconds % 2 == 0) && currentPlayer) ? "bg-red text-white border-black" : "bg-white text-black border-black"}`}>
+                            <Countdown 
+                                durationMs={durationMs} 
+                                timeLeft={timeLeft} 
+                                setTimeLeft={setTimeLeft}
+                                isPaused={isPaused}
+                                remainingMsRef={remainingMsRef}
+                                round={round}
+                            />
+                        </div>}
+                        <div className='grid grid-cols-2 grid-rows-2 w-full px-8 gap-3'>
+                            {randomFour.map((player, i) => (
+                                <button
+                                    disabled={guessed || show50.includes(player)}
+                                    key={i} 
+                                    className={`
+                                        p-4 border-2 border-white w-full h-full text-offwhite transition-all active:scale-95 disabled:opacity-40
+                                        ${guessed ? "cursor-not-allowed" : "cursor-pointer hover:bg-offwhite hover:text-blue"}
+                                        ${guessed && player.name === currentPlayer.name ? "bg-green-500!" : ""}
+                                        ${player.name === wrongAnswer ? "bg-red-600! opacity-40" : ""}
+                                        ${guessed && player.name !== currentPlayer.name && player.name !== wrongAnswer ? "opacity-40" : ""}
+                                    `}
+                                    onClick={()=>handleAnswer(player.name)}
+                                >
+                                    <div className={`text-4xl font-bold ${hasLoaded ? "" : "invisible"}`}>
+                                        {player.name}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                     }
 
                     {(difficulty === "medium" || difficulty === "hard") && 
                     <div className='flex w-2/3 mx-8'>
-                        {showTimer && <div className={`flex mr-2 w-24 shrink-0 justify-center items-center border-2 text-2xl px-4 ${(timeLeft.minutes === 0) && (timeLeft.seconds <= 10) && (timeLeft.seconds % 2 == 0) ? "bg-red text-white border-black" : "bg-white text-black border-black"}`}>
+                        {showTimer && <div className={`flex mr-2 w-24 shrink-0 justify-center items-center border-3 text-2xl px-4 ${((timeLeft.minutes === 0) && (timeLeft.seconds <= 10) && (timeLeft.seconds % 2 == 0) && currentPlayer) ? "bg-red text-white border-black" : "bg-white text-black border-black"}`}>
                             <Countdown 
-                                durationMs={60000} 
+                                durationMs={durationMs} 
                                 timeLeft={timeLeft} 
                                 setTimeLeft={setTimeLeft}
                                 isPaused={isPaused}
-                                key={round}
+                                remainingMsRef={remainingMsRef}
+                                round={round}
                             />
                         </div>}
                         <div className='relative border-0 flex items-center w-full text-2xl'>
@@ -434,7 +466,7 @@ export default function Game({ difficulty, setDifficulty }) {
                                 type='text'
                             />
                             {difficulty === "medium" && <ul
-                                className='absolute top-full left-0 w-full max-h-[33vh] mt-1 overflow-y-auto scrollbar-track-offwhite scrollbar-thumb-neutral-500'
+                                className='z-10 absolute top-full left-0 w-full max-h-[33vh] mt-1 overflow-y-auto scrollbar-track-offwhite scrollbar-thumb-neutral-500'
                             >
                                 {results.map((player, i) => (
                                     <li 
@@ -465,14 +497,26 @@ export default function Game({ difficulty, setDifficulty }) {
                             </svg>
                         </button>
                         <button 
-                            className='cursor-pointer shrink-0 group flex justify-center items-center px-4 bg-red ml-2 border-2 border-black'
+                            className={`cursor-pointer shrink-0 group flex justify-center items-center px-4 text-white text-2xl bg-red ml-2 border-2 border-black transition-all ${guessed ? 'animate-pulse' : ''}`}
                             // title='Give Up?'
                             onClick={()=>{
-                                handleAnswer("");
+                                console.log(guessed)
+                                if(!guessed){
+                                    handleAnswer("");
+                                    console.log("test1")
+                                }
+                                else{
+                                    generateFour();
+                                    setRound(round + 1);
+                                    setIsPaused(false);
+                                    setGuessed(false);
+                                    setInput("");
+                                    setCorrect(false)
+                                }
                                 // if(confirm("Are you sure you want to give up?")) handleAnswer("");
                             }}
                         >
-                            <div className='text-white text-2xl'>Give Up?</div>
+                            <div className='w-25'>{guessed ? "Next Round" : "Give Up?"}</div>
                             {/* <svg xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" viewBox="0 0 250 352" className='rotate-20 w-8 h-auto group-hover:animate-rock'>
                                 <path className="stroke-current text-black" strokeWidth="21" strokeLinecap="round" fill="none" d="M42 327l0 -291" />
                                 <path className="fill-white stroke-current text-black" strokeWidth="10" strokeLinejoin="round" d="M49 50c70,30 104,28 178,2 -21,42 -21,74 0,116 -72,25 -101,25 -178,0l0 -118z" />
@@ -482,61 +526,174 @@ export default function Game({ difficulty, setDifficulty }) {
                     }
                 </div>
                 <div className='flex justify-center flex-1 w-full'>
-                    <div className='flex aspect-600/436 w-auto h-full border-white overflow-hidden'>
+                    <div className='flex aspect-600/436 w-auto h-full border-white overflow-hidden relative'>
                         {!hasLoaded &&
                             <div className='flex justify-center items-center w-full'>
                                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
                             </div>
                         }
                         <img 
-                            className={`w-full h-auto object-cover ${hasLoaded ? 'visible' : 'hidden'}`}
+                            className={`w-full h-auto object-cover pointer-events-none ${hasLoaded ? 'visible' : 'hidden'} ${startGame ? "" : "brightness-0"}`}
                             src={silhouette}
                             alt='Player'
                             onLoad={()=>setHasLoaded(true)}
                             onError={handleImageError}
                         />
+                        {!startGame && <div className='absolute top-[50%] left-[50%] translate-[-50%] pointer-events-auto'>
+                            <button 
+                                className='relative cursor-pointer flex justify-center items-center gap-4 text-5xl text-nowrap border-black border-5 outline-white outline-3 py-5 pl-[5vw] pr-8 bg-offwhite text-black rounded-none active:scale-95'
+                                onClick={()=>setStartGame(true)}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" className='absolute top-[50%] left-[8%] translate-[-50%]' viewBox="0 0 16 16">
+                                    <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
+                                </svg>
+                                <div>Press to Start</div>
+                            </button>
+                        </div>}
                     </div>
                 </div>
             </section>
             
             {/* RIGHT */}
-            <section className='flex flex-col w-1/5 border-l-3 bg-offwhite p-8 gap-8'>
+            <section className='flex flex-col w-1/5 border-l-3 bg-offwhite/80 p-8 gap-8'>
                 <div className='flex justify-center items-center h-8 text-4xl underline'>
                     Hints
                 </div>
-                <ul className='flex flex-col gap-4'>
-                    <button className={`flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 ${showBlank ? "" : "cursor-pointer"}`}
-                        onClick={() => {
-                            setShowBlank(true)
-                            setPoints(Math.floor(points/2))
+                <ul className='flex flex-col gap-4 overflow-auto scrollbar-track-offwhite scrollbar-thumb-neutral-500'>
+                    {(difficulty === "medium" || difficulty === "hard") && <div className={`flex flex-col ${(!currentPlayer || guessed) ? "" : ""}`}>
+                        <button className={`flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 border-solid border-b-0 border-black shadow-lg bg-yellow-500 transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500 ${showBlank ? "select-text" : "cursor-pointer"}`}
+                            disabled={!currentPlayer || guessed}
+                            onClick={() => {
+                                setShowBlank(true);
+                                if(!showBlank) setPoints(Math.floor(points/2));
+                            }}
+                        >
+                            <div className='absolute top-2 left-2'>
+                                <Lock locked={!showBlank}/>
+                            </div>
+                            <div className='absolute top-2 right-2 text-[16px]'>
+                                {currentPlayer && !showBlank && <div>{points === 0 ? "No more points!" : <div>-{Math.ceil(points/POINT_FACTOR)}</div>}</div>}
+                            </div>
+                            {showBlank ? <div className='tracking-widest text-4xl min-h-18 flex justify-center items-center'>{hiddenName.join("")}</div> : 
+                            <div>
+                                <div>Click to reveal:</div>
+                                <div>Fill-in-the-blank</div>
+                            </div>}
+                        </button>
+                        <button className='flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 border-solid [border-top-style:dashed] border-black shadow-lg bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
+                            disabled={!showBlank || !hiddenName.includes("_") || guessed}
+                            onClick={revealNextLetter}
+                        >
+                            <div className='absolute top-2 left-2'>
+                                <Lock locked={!showBlank || !hiddenName.includes("_")}/>
+                            </div>
+                            <div className='absolute top-2 right-2 text-[16px]'>
+                                {showBlank && <div className='z-10'>{points === 0 ? "" : `-${Math.ceil(points/POINT_FACTOR)}`}</div>}
+                            </div>
+                            <div>Click to reveal:</div>
+                            <div>Next letter</div>
+                        </button>
+                    </div>}
+                    {difficulty === "easy" && <button className='flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
+                        disabled={!currentPlayer || guessed}
+                        onClick={()=>{
+                            const incorrect = randomFour.filter(option => option !== currentPlayer);
+                            incorrect.sort(()=>Math.random()-0.5);
+                            setShow50([incorrect[0], incorrect[1]])
+                            setPoints(points - Math.floor(currentPlayer.points/2))
                         }}
                     >
                         <div className='absolute top-2 left-2'>
-                            <Lock locked={!showBlank}/>
-                        </div>
-                        <div className='absolute top-2 right-2 text-[16px]'>
-                            {currentPlayer && !showBlank && <div>{points === 0 ? "No more points!" : <div>-{Math.ceil(points/POINT_FACTOR)}</div>}</div>}
-                        </div>
-                        {showBlank ? <div className='tracking-widest text-4xl min-h-18 flex justify-center items-center'>{hiddenName.join("")}</div> : 
-                        <div>
-                            <div>Click to reveal:</div>
-                            <div>Fill-in-the-blank</div>
-                        </div>}
-                    </button>
-                    <button className='flex flex-col justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
-                        disabled={!showBlank || !hiddenName.includes("_")}
-                        onClick={revealNextLetter}
-                    >
-                        <div className='absolute top-2 left-2'>
-                            <Lock locked={!showBlank || !hiddenName.includes("_")}/>
-                        </div>
-                        <div className='absolute top-2 right-2 text-[16px]'>
-                            {showBlank && <div>{points === 0 ? "No more points!" : <div>-{Math.ceil(points/POINT_FACTOR)}</div>}</div>}
+                            <Lock locked={false}/>
                         </div>
                         <div>Click to reveal:</div>
-                        <div>Letter</div>
+                        <div>50/50</div>
+                    </button>}
+                    <button className='flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
+                        disabled={!currentPlayer || guessed}
+                        onClick={()=>{
+                            setShowTeam(true);
+                            if(!showTeam) setPoints(points - POINT_FACTOR);
+                        }}
+                    >
+                        <div className='absolute top-2 left-2'>
+                            <Lock locked={!showTeam}/>
+                        </div>
+                        <div className='absolute top-2 right-2 text-[16px]'>
+                            {currentPlayer && !showTeam && <div>{points === 0 ? "0" : <div>-{POINT_FACTOR}</div>}</div>}
+                        </div>
+                        {showTeam ? <div className='flex flex-col gap-2'>
+                            <p className='text-blue'>{currentPlayer?.team[0]}</p>
+                            {/* <img src={`https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/${currentPlayer?.team[1]}.png`}/> */}
+                        </div>
+                        : <div>
+                            <div>Click to reveal:</div>
+                            <div>Current team</div>
+                        </div>}
                     </button>
                 </ul>
+
+                <div className='flex flex-col gap-4 mt-auto'>
+                    <div 
+                        className='text-lg h-min border-2 text-neutral-800 py-4 px-8 w-full text-center bg-white hover:underline hover:bg-offwhite active:scale-95 cursor-pointer transition-all'
+                        onClick={()=>{
+                            setModal("settings")
+                            setIsOpen(true)
+                        }}
+                    >
+                        Settings
+                    </div>
+                    <p className='text-neutral-500 text-center'>&copy; {new Date().getFullYear()} WhoDat. All rights reserved.</p>
+                </div>
+                <div
+                    className={`${isOpen ? 'flex' : 'hidden'} fixed inset-0 z-50 items-center justify-center bg-black/40`}
+                    onClick={()=>setIsOpen(false)}
+                >
+                    <div
+                        className="flex flex-col relative text-[2cqi] rounded-xl bg-neutral-200 p-8 shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {modal === 'settings' && <div className='flex flex-col justify-center gap-6'>
+                            <h1 className='underline font-bold'>Settings:</h1>
+                            <ul className='list-disc pl-8 flex flex-col justify-center gap-8'>
+                                <li>
+                                    <div className='w-full items-center flex gap-4'>
+                                        <span className='flex-1'>Autoplay:</span>
+                                        <Toggle
+                                            enabled={autoplay}
+                                            setEnabled={setAutoplay}
+                                        />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div className='w-full items-center flex gap-4'>
+                                        <span className='flex-1'>Timer:</span>
+                                        <Toggle
+                                            enabled={showTimer}
+                                            setEnabled={setShowTimer}
+                                        />
+                                    </div>
+                                </li>
+                                {showTimer && <li>
+                                    {/* <span>Time:</span> */}
+                                    <div className='flex items-center'>
+                                        <span>Time:</span>
+                                        <input className='mx-4 disabled:cursor-not-allowed' type='range' disabled={!guessed && currentPlayer} min='1000' max='60000' step='1000' value={durationMs} onChange={(e)=>setDurationMs(Number(e.target.value))}></input>
+                                        <span className='text-blue-600 text-[1.2cqi]'>{durationMs/1000}s</span>
+                                    </div>
+                                    {(!guessed && currentPlayer) && <p className='text-red text-[1.1rem] my-1'>*You cannot change the timer mid-round.</p>}
+                                </li>}
+                            </ul>
+                        </div>}
+                        <button
+                            onClick={()=>setIsOpen(false)}
+                            className="cursor-pointer absolute right-4 -top-2 text-[3cqi] text-neutral-500 hover:text-black"
+                            title='Close'
+                        >
+                            &times;
+                        </button>
+                    </div>
+                </div>
             </section>
         </main>
     )

@@ -1,22 +1,37 @@
 import { useEffect, useRef } from "react";
 
-const Countdown = ({ durationMs, timeLeft, setTimeLeft, isPaused }) => {
+const Countdown = ({ durationMs, timeLeft, setTimeLeft, isPaused, remainingMsRef, round }) => {
   const endTimeRef = useRef(null);
   const timerRef = useRef(null);
-  const remainingMsRef = useRef(durationMs); // Tracks leftover ms when paused
+  // const remainingMsRef = useRef(durationMs); 
 
   const formatTimeLeft = (difference) => {
     if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, remainingMs: 0, expired: true };
     }
     return {
       days: Math.floor(difference / (1000 * 60 * 60 * 24)),
       hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
       minutes: Math.floor((difference / 1000 / 60) % 60),
       seconds: Math.floor((difference / 1000) % 60),
+      remainingMs: difference,
       expired: false,
     };
   };
+
+  useEffect(() => {
+      remainingMsRef.current = durationMs;
+      endTimeRef.current = null;
+
+      setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: Math.floor(durationMs / 60000),
+          seconds: Math.floor((durationMs / 1000) % 60),
+          remainingMs: Number(durationMs),
+          expired: false
+      });
+  }, [round, durationMs]);
 
   useEffect(() => {
     // 1. If paused, clear the interval and stop updating
@@ -26,7 +41,7 @@ const Countdown = ({ durationMs, timeLeft, setTimeLeft, isPaused }) => {
     }
 
     // 2. If resuming or starting fresh, calculate a new absolute end time
-    endTimeRef.current = Date.now() + remainingMsRef.current;
+    endTimeRef.current = Date.now() + Number(remainingMsRef.current);
 
     timerRef.current = setInterval(() => {
       const remaining = endTimeRef.current - Date.now();

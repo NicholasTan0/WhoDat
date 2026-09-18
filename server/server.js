@@ -48,7 +48,13 @@ const getPlayers = async () => {
 
     // Get all team rosters concurrently
     const requests = teams.map(async (team) => {
-        const teamName = team.split('/')[1].split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        const [abbreviation, slug] = team.split('/');
+
+        const teamName = slug
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        
         const teamURL = `https://www.espn.com/nba/team/roster/_/name/${team}`;
 
         try {
@@ -76,7 +82,7 @@ const getPlayers = async () => {
                     age,
                     height,
                     college,
-                    team: teamName,
+                    team: [teamName, abbreviation],
                     id
                 });
             });

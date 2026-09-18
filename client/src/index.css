@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Gasoek+One&family=Oswald:wght@200..700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Fontdiner+Swanky&family=Gasoek+One&family=Oswald:wght@200..700&display=swap');
 @import "tailwindcss";
 
 @theme {
     --font-md: "Oswald", sans-serif;
     --font-lg: "Gasoek One", sans-serif;
+    --font-logo: "Fontdiner Swanky", serif;
     --color-red: #c8102e;
     --color-blue: #1d428a;
     --color-offwhite: #eeeeee;

@@ -1,60 +1,23 @@
 import { useState } from 'react'
-import Main from './components/Main'
-import Start from './pages/Start';
 import Game from './pages/Game';
-import favicon from '/favicon.svg'
-import Hintbar from './components/Hintbar';
+import Title from './pages/Title';
 
 function App() {
-  // const [enableLives, setEnableLives] = useState(false);
-  // const [lives, setLives] = useState(3);
-  // const [enableHints, setEnableHints] = useState(false);
-  // const [hints, setHints] = useState({
-  //   team: true,
-  //   position: true,
-  //   age: true,
-  //   height: true,
-  //   college: true,
-  //   number: true,
-  // })
-  // const [enableTime, setEnableTime] = useState(false);
-  // const [timeLimit, setTimeLimit] = useState(10);
   const [difficulty, setDifficulty] = useState(null);
+  const [screen, setScreen] = useState("title");
 
   return (
-    <div className='flex flex-col h-screen'>
-      {/* <Main
-        enableLives={enableLives}
-        lives={lives}
-        enableHints={enableHints}
-        hints={hints}
-        enableTime={enableTime}
-        timeLimit={timeLimit}
-        setEnableLives={setEnableLives}
-        setLives={setLives}
-        setEnableHints={setEnableHints}
-        setHints={setHints}
-        setEnableTime={setEnableTime}
-        setTimeLimit={setTimeLimit}
-      /> */}
-
-      <header className='flex items-center bg-black w-full h-16 px-4'>
-        <a href='/' className='flex items-center gap-1.5 text-white font-bold text-xl'>
-          <img src={favicon} alt='Logo' className='h-8'/>
-          <div>WhoDat?</div>
-        </a>
-      </header>
-
+    <div className="flex flex-col h-screen bg-cover bg-center bg-no-repeat bg-[url('src/assets/background.png')]">
       {!difficulty ? 
-        <Start
+        <Title
           setDifficulty={setDifficulty}
-        /> 
-        : <Game
+          screen={screen}
+          setScreen={setScreen}
+        /> :
+        <Game
           difficulty={difficulty}
           setDifficulty={setDifficulty}
-        />
-      }
-        
+        />}
     </div>
   )
 }
