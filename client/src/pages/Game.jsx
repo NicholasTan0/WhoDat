@@ -709,54 +709,137 @@ export default function Game({ difficulty, setDifficulty }) {
             {/* ===================================================== MOBILE ===================================================== */}
             
             <main className='flex flex-col lg:hidden w-full bg-offwhite'>
-                <header className='sticky top-0 left-0 z-99 bg-black w-full'>
-                    <div className='flex justify-between items-center p-4 text-offwhite'>
-                        <a href="/" className='text-xl font-logo font-bold'>WhoDat?</a>
+                <header className="sticky top-0 left-0 z-99 bg-black w-full">
+                    <div className="flex justify-between items-center p-4 text-offwhite">
+                        <a href="/" className="text-xl font-logo font-bold">
+                            WhoDat?
+                        </a>
+
                         <button
-                            className='cursor-pointer'
-                            onClick={()=>setIsOpen(!isOpen)}
+                            className="cursor-pointer"
+                            onClick={() => setIsOpen(!isOpen)}
                         >
-                            {isOpen ? <svg xmlns="http://www.w3.org/2000/svg" className='h-8 w-8 fill-current' viewBox="0 0 16 16">
-                                <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-                            </svg> : 
-                            <svg xmlns="http://www.w3.org/2000/svg" className='h-8 w-8 fill-current' viewBox="0 0 16 16">
-                                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                            </svg>}
+                            {isOpen ? (
+                                // X
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-8 w-8 fill-current"
+                                    viewBox="0 0 16 16"
+                                >
+                                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+                                </svg>
+                            ) : (
+                                // hamburger
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-8 w-8 fill-current"
+                                    viewBox="0 0 16 16"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"
+                                    />
+                                </svg>
+                            )}
                         </button>
                     </div>
                 </header>
-                {!isOpen && <div
-                    className="fixed inset-0 z-98 bg-black/50"
-                    onClick={() => setIsOpen(false)}
-                />}
-                <div className={`fixed z-99 w-80 h-[calc(100vh-64px)] bottom-0 right-0 p-8 text-3xl bg-offwhite transition-all ${isOpen ? "translate-x-full" : ""}`}>
-                    <h1 className='font-black mb-8'>Settings</h1>
-                    <ul className='flex flex-col justify-center gap-8'>
+
+                {/* Backdrop */}
+                {isOpen && (
+                    <div
+                        className="fixed inset-0 z-98 bg-black/50"
+                        onClick={() => setIsOpen(false)}
+                    />
+                )}
+
+                {/* Sidebar */}
+                <div
+                    className={`
+                        fixed
+                        z-99
+                        right-0
+                        bottom-0
+                        w-[85vw]
+                        max-w-80
+                        h-[calc(100dvh-64px)]
+                        p-6 sm:p-8
+                        text-3xl
+                        bg-offwhite
+                        transition-transform
+                        duration-300
+                        overflow-y-auto
+                        ${isOpen ? "translate-x-0" : "translate-x-full"}
+                    `}
+                >
+                    <h1 className="font-black mb-8">
+                        Settings
+                    </h1>
+
+                    <ul className="flex flex-col gap-8">
                         <li>
-                            <div className='w-full items-center flex gap-4'>
-                                <span className='flex-1'>Autoplay:</span>
+                            <div className="w-full flex items-center gap-4">
+                                <span className="flex-1">
+                                    Autoplay:
+                                </span>
+
                                 <Toggle
                                     enabled={autoplay}
                                     setEnabled={setAutoplay}
                                 />
                             </div>
                         </li>
+
                         <li>
-                            <div className='w-full items-center flex gap-4'>
-                                <span className='flex-1'>Timer:</span>
+                            <div className="w-full flex items-center gap-4">
+                                <span className="flex-1">
+                                    Timer:
+                                </span>
+
                                 <Toggle
                                     enabled={showTimer}
                                     setEnabled={setShowTimer}
                                 />
                             </div>
                         </li>
-                        <li className={`transition-all ${showTimer ? "opacity-100" : "opacity-0 -translate-y-5"}`}>
-                            <div className='flex items-center'>
-                                <span>Time:</span>
-                                <input className='mx-4 disabled:cursor-not-allowed' type='range' disabled={!guessed && currentPlayer} min='1000' max='60000' step='1000' value={durationMs} onChange={(e)=>setDurationMs(Number(e.target.value))}></input>
-                                <span className='text-blue-600 text-lg'>({durationMs/1000}s)</span>
+
+                        <li
+                            className={`
+                                transition-all
+                                ${showTimer
+                                    ? "opacity-100"
+                                    : "opacity-0 -translate-y-5 pointer-events-none"
+                                }
+                            `}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="shrink-0">
+                                    Time:
+                                </span>
+
+                                <input
+                                    className="min-w-0 flex-1"
+                                    type="range"
+                                    disabled={!guessed && currentPlayer}
+                                    min="1000"
+                                    max="60000"
+                                    step="1000"
+                                    value={durationMs}
+                                    onChange={(e) =>
+                                        setDurationMs(Number(e.target.value))
+                                    }
+                                />
+
+                                <span className="shrink-0 text-blue-600 text-lg">
+                                    ({durationMs / 1000}s)
+                                </span>
                             </div>
-                            {(!guessed && currentPlayer) && <p className='text-red text-lg my-2'>*You cannot change the timer mid-round.</p>}
+
+                            {!guessed && currentPlayer && (
+                                <p className="text-red text-lg my-2">
+                                    *You cannot change the timer mid-round.
+                                </p>
+                            )}
                         </li>
                     </ul>
                 </div>
