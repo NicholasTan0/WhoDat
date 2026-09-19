@@ -602,7 +602,7 @@ export default function Game({ difficulty, setDifficulty }) {
                             </button>
                         </div>}
                         {difficulty === "easy" && <button className='flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
-                            disabled={!currentPlayer || guessed || show50}
+                            disabled={!currentPlayer || guessed || show50.length > 0}
                             onClick={()=>{
                                 const incorrect = randomFour.filter(option => option !== currentPlayer);
                                 incorrect.sort(()=>Math.random()-0.5);
@@ -611,10 +611,10 @@ export default function Game({ difficulty, setDifficulty }) {
                             }}
                         >
                             <div className='absolute top-2 left-2'>
-                                <Lock locked={!currentPlayer || guessed || show50}/>
+                                <Lock locked={!currentPlayer || guessed || show50.length > 0}/>
                             </div>
                             <div className='absolute top-2 right-2 text-[16px]'>
-                                {show50 && <div className='z-10'>{points === 0 ? "" : `-${Math.ceil(points/POINT_FACTOR)}`}</div>}
+                                {show50.length > 0 && <div className='z-10'>{points === 0 ? "" : `-${Math.ceil(points/POINT_FACTOR)}`}</div>}
                             </div>
                             <div>Click to reveal:</div>
                             <div>50/50</div>
@@ -759,10 +759,10 @@ export default function Game({ difficulty, setDifficulty }) {
                         fixed
                         z-99
                         right-0
-                        bottom-0
+                        top-16
                         w-[85vw]
                         max-w-80
-                        h-[calc(100dvh-64px)]
+                        h-[calc(100dvh-4rem)]
                         p-6 sm:p-8
                         text-3xl
                         bg-offwhite
@@ -1069,7 +1069,7 @@ export default function Game({ difficulty, setDifficulty }) {
                             </button>
                         </div>}
                         {difficulty === "easy" && <button className='flex flex-col flex-1 justify-center items-center text-3xl relative text-black p-8 border-2 shadow-lg border-black bg-yellow-500 cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-neutral-500'
-                            disabled={!currentPlayer || guessed || show50}
+                            disabled={!currentPlayer || guessed || show50.length > 0}
                             onClick={()=>{
                                 const incorrect = randomFour.filter(option => option !== currentPlayer);
                                 incorrect.sort(()=>Math.random()-0.5);
@@ -1078,10 +1078,10 @@ export default function Game({ difficulty, setDifficulty }) {
                             }}
                         >
                             <div className='absolute top-2 left-2'>
-                                <Lock locked={!currentPlayer || guessed || show50}/>
+                                <Lock locked={!currentPlayer || guessed || show50.length > 0}/>
                             </div>
                             <div className='absolute top-2 right-2 text-[16px]'>
-                                {show50 && <div className='z-10'>{points === 0 ? "" : `-${Math.ceil(points/POINT_FACTOR)}`}</div>}
+                                {show50.length > 0 && <div className='z-10'>{points === 0 ? "" : `-${Math.ceil(points/POINT_FACTOR)}`}</div>}
                             </div>
                             <div>Click to reveal:</div>
                             <div>50/50</div>
