@@ -8,7 +8,7 @@ export default function Game({ difficulty, setDifficulty }) {
     const [allPlayers, setAllPlayers] = useState([]);
     const [randomFour, setRandomFour] = useState([]);
     const [currentPlayer, setCurrentPlayer] = useState(null);
-    const [silhouette, setSilhouette] = useState('/src/assets/silhouette.png');
+    const [silhouette, setSilhouette] = useState('/silhouette.png');
     const [hasLoaded, setHasLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [input, setInput] = useState("");
@@ -218,7 +218,6 @@ export default function Game({ difficulty, setDifficulty }) {
     }
 
     function isCorrect(userInput, correctAnswer) {
-        // Normalize accents, case, and whitespace
         const normalize = (str) =>
             str
                 .normalize("NFD")
@@ -397,16 +396,9 @@ export default function Game({ difficulty, setDifficulty }) {
                             </div>
                         </div>
                     </div>
-                    <div className='mt-auto'>
-                        {/* <div>Lives:</div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 130 130">
-                            <path fill="red" d="M 65,29 C 59,19 49,12 37,12 20,12 7,25 7,42 7,75 25,80 65,118 105,80 123,75 123,42 123,25 110,12 93,12 81,12 71,19 65,29 z"/>
-                        </svg> */}
-                    </div>
                 </section>
 
                 {/* MIDDLE */}
-                {/* bg-[radial-gradient(rgba(255,255,255,0.5)_1px,transparent_1px)] bg-size-[32px_32px] */}
                 <section className={`relative flex flex-col items-center flex-1 bg-blue ${!startGame ? 'pointer-events-none' : ''}`}>
                     <div className='flex justify-center items-center w-full'>
                         <div className='flex justify-center items-center mx-8 text-white text-5xl w-2/3 font-lg uppercase border-b-2 mt-8 pb-4 mb-4'>
@@ -541,10 +533,6 @@ export default function Game({ difficulty, setDifficulty }) {
                                 }}
                             >
                                 <div className='w-25'>{guessed ? "Next Round" : "Don't Know"}</div>
-                                {/* <svg xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" viewBox="0 0 250 352" className='rotate-20 w-8 h-auto group-hover:animate-rock'>
-                                    <path className="stroke-current text-black" strokeWidth="21" strokeLinecap="round" fill="none" d="M42 327l0 -291" />
-                                    <path className="fill-white stroke-current text-black" strokeWidth="10" strokeLinejoin="round" d="M49 50c70,30 104,28 178,2 -21,42 -21,74 0,116 -72,25 -101,25 -178,0l0 -118z" />
-                                </svg> */}
                             </button>
                         </div>
                         }
@@ -568,9 +556,6 @@ export default function Game({ difficulty, setDifficulty }) {
                                     className='relative cursor-pointer flex justify-center items-center border-2 border-offwhite bg-black p-5 rounded-full'
                                     onClick={()=>setStartGame(true)}
                                 >
-                                    {/* <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" className='absolute top-[50%] left-[8%] translate-[-50%]' viewBox="0 0 16 16">
-                                        <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
-                                    </svg> */}
                                     <div className='text-[clamp(2rem,3rem,4vw)] text-nowrap text-white font-bold font-logo tracking-wide'>Click to Start!</div>
                                 </button>
                             </div>}
@@ -923,7 +908,7 @@ export default function Game({ difficulty, setDifficulty }) {
                                     {guessed ? "Next Round" : 
                                     <div className='flex justify-center items-center gap-1'>
                                         <div>Don't Know</div>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="1rem" height="1rem" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="1rem" height="1rem" fill="currentColor" viewBox="0 0 16 16">
                                             <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
                                         </svg>
                                     </div>}
@@ -961,7 +946,7 @@ export default function Game({ difficulty, setDifficulty }) {
                 <section id='hints' className='relative flex flex-col w-full bg-offwhite border-y-2 border-black p-8 gap-4'>
                     <a href='#hints' className='absolute -top-5 left-[50%] translate-x-[-50%] z-9 border-2 text-neutral-800 bg-offwhite/50 rounded-full p-2'>
                         <svg xmlns="http://www.w3.org/2000/svg" className='h-6 w-6 fill-current' viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+                            <path fillRule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
                         </svg>
                     </a>
                     <h1 className='flex justify-center items-center text-4xl underline'>Hints</h1>

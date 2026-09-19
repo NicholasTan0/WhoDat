@@ -1,5 +1,3 @@
-// import logo from '../assets/logo-dark.png'
-
 export default function Start({ setDifficulty, setScreen }) {
     return(
         <div className="flex flex-col w-full h-full justify-center items-center pb-8">

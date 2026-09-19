@@ -1,49 +1,52 @@
-# 🏀 **WhoDat?** | NBA Guessing Game
+# WhoDat? 🏀
 
-Welcome to **WhoDat?**, an interactive web-based NBA guessing game where your knowledge of basketball players is put to the test! Guess the player based off their headshot with the help of hints, from age and height to team and jersey number. Can you identify the player before you run out of lives?
+WhoDat? is an NBA player guessing game.
 
----
+Look at the player, figure out who it is, and try to answer as quickly as possible. There are three difficulty levels, each giving you a different way to identify the player.
 
-## **Features**
+## How to Play
 
-* Guess NBA players based on hints (e.g., team, position, age, college, jersey number).
-* Customizable game modes:
-    * **Lives**: Choose how many wrong guesses you're allowed.
-    * **Hints**: Toggle hints on/off or set which ones are allowed.
-    * **Timer mode**: Optional countdown for each guess.
+### Easy — Multiple Choice
 
----
+A player is shown along with four possible answers. Pick the correct one.
 
-## **How to Play**
+### Medium — Assisted Search
 
-1. Open the sidebar to toggle lives, hints, and timer mode.
-2. Press **"Start Game"** to generate a random player.
-3. Enter your guess (full player name) into the input box.
-4. If correct, you win the round and move on.
-5. If incorrect, lose a life. Game ends when lives = 0.
+Type the player's name into the search bar. Matching players will appear as you type.
 
----
+### Hard — Spelling Bee
 
-## **Tech Stack**
+Type the player's full name without any autocomplete suggestions. You have to know the name yourself.
 
- [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)](#)
- [![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB)](#)
- [![NodeJS](https://img.shields.io/badge/Node.js-6DA55F?logo=node.js&logoColor=white)](#)
- [![Express.js](https://img.shields.io/badge/Express.js-%23404d59.svg?logo=express&logoColor=%2361DAFB)](#)
- [![HTML](https://img.shields.io/badge/HTML-%23E34F26.svg?logo=html5&logoColor=white)](#)
- [![CSS](https://img.shields.io/badge/CSS-639?logo=css&logoColor=fff)](#)
+## Scoring
 
----
+Points are based on how difficult the player is to identify and how quickly you answer.
 
-## **Planned Features**
+Answer quickly to get the most points. The longer you take, the fewer points you receive.
 
-* [ ] Leaderboards
-* [ ] Multiplayer mode
-* [ ] Daily challenge mode
-* [ ] Advanced stat tracking
+Some players are worth significantly more points than others.
 
----
+## Features
 
-## **Contributing**
+* Three difficulty levels
+* Timed rounds
+* Speed-based scoring
+* Player streaks
+* 50/50 option in Easy mode
+* Player search and autocomplete
+* NBA player headshots
+* Keyboard controls
+* Responsive layout
 
-Contributions are welcome! If you have an idea for a feature, bug fix, or improvement, please submit a pull request or open an issue.
+## Tech
+
+* React
+* JavaScript
+* Tailwind CSS
+* Vite
+
+## WhoDat?
+
+Think you know the NBA?
+
+**Prove it.**
