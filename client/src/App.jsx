@@ -7,7 +7,7 @@ function App() {
   const [screen, setScreen] = useState("title");
 
   return (
-    <div className="flex flex-col h-screen bg-cover bg-center bg-no-repeat bg-[url('src/assets/background.png')]">
+    <div className="flex flex-col min-h-screen lg:h-screen w-full bg-cover bg-center bg-repeat bg-[url('src/assets/background.png')]">
       {!difficulty ? 
         <Title
           setDifficulty={setDifficulty}
